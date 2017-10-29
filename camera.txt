@@ -1,0 +1,309 @@
+These are the following two ways, in which you can use camera in your application
+
+Using existing android camera application in our application
+
+Directly using Camera API provided by android in our application
+
+Using existing android camera application in our application
+You will use MediaStore.ACTION_IMAGE_CAPTURE to launch an existing camera application installed on your phone. Its syntax is given below
+
+Intent intent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
+Apart from the above, there are other available Intents provided by MediaStore. They are listed as follows
+
+Sr.No	Intent type and description
+1	
+ACTION_IMAGE_CAPTURE_SECURE
+
+It returns the image captured from the camera , when the device is secured
+
+2	
+ACTION_VIDEO_CAPTURE
+
+It calls the existing video application in android to capture video
+
+3	
+EXTRA_SCREEN_ORIENTATION
+
+It is used to set the orientation of the screen to vertical or landscape
+
+4	
+EXTRA_FULL_SCREEN
+
+It is used to control the user interface of the ViewImage
+
+5	
+INTENT_ACTION_VIDEO_CAMERA
+
+This intent is used to launch the camera in the video mode
+
+6	
+EXTRA_SIZE_LIMIT
+
+It is used to specify the size limit of video or image capture size
+
+Now you will use the function startActivityForResult() to launch this activity and wait for its result. Its syntax is given below
+
+startActivityForResult(intent,0)
+This method has been defined in the activity class. We are calling it from main activity. There are methods defined in the activity class that does the same job , but used when you are not calling from the activity but from somewhere else. They are listed below
+
+Sr.No	Activity function description
+1	
+startActivityForResult(Intent intent, int requestCode, Bundle options)
+
+It starts an activity , but can take extra bundle of options with it
+
+2	
+startActivityFromChild(Activity child, Intent intent, int requestCode)
+
+It launch the activity when your activity is child of any other activity
+
+3	
+startActivityFromChild(Activity child, Intent intent, int requestCode, Bundle options)
+
+It work same as above , but it can take extra values in the shape of bundle with it
+
+4	
+startActivityFromFragment(Fragment fragment, Intent intent, int requestCode)
+
+It launches activity from the fragment you are currently inside
+
+5	
+startActivityFromFragment(Fragment fragment, Intent intent, int requestCode, Bundle options)
+
+It not only launches the activity from the fragment , but can take extra values with it
+
+No matter which function you used to launch the activity , they all return the result. The result can be obtained by overriding the function onActivityResult.
+
+Example
+Here is an example that shows how to launch the existing camera application to capture an image and display the result in the form of bitmap.
+
+To experiment with this example , you need to run this on an actual device on which camera is supported.
+
+Steps	Description
+1	You will use Android studio IDE to create an Android application and name it as Camera under a com.example.sairamkrishna.myapplication.
+2	Modify src/MainActivity.java file to add intent code to launch the Camera.
+3	Modify layout XML file res/layout/activity_main.xml
+4	Add the Camera permission and run the application and choose a running android device and install the application on it and verify the results.
+Following is the content of the modified main activity file src/MainActivity.java.
+
+package com.example.sairamkrishna.myapplication;
+
+import android.Manifest;
+import android.app.Activity;
+import android.app.AlertDialog;
+
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+
+import android.net.Uri;
+import android.os.Bundle;
+import android.provider.Settings;
+
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
+
+public class MainActivity extends AppCompatActivity {
+   public static final int MY_PERMISSIONS_REQUEST_CAMERA = 100;
+   public static final String ALLOW_KEY = "ALLOWED";
+   public static final String CAMERA_PREF = "camera_pref";
+
+   @Override
+   protected void onCreate(Bundle savedInstanceState) {
+      super.onCreate(savedInstanceState);
+      setContentView(R.layout.activity_main);
+
+      if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+         if (getFromPref(this, ALLOW_KEY)) {
+            showSettingsAlert();
+         } else if (ContextCompat.checkSelfPermission(this,
+            Manifest.permission.CAMERA)
+            
+            != PackageManager.PERMISSION_GRANTED) {
+               
+               // Should we show an explanation?
+               if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                  Manifest.permission.CAMERA)) {
+                  showAlert();
+               } else {
+                  // No explanation needed, we can request the permission.
+                  ActivityCompat.requestPermissions(this,
+                     new String[]{Manifest.permission.CAMERA},
+                     MY_PERMISSIONS_REQUEST_CAMERA);
+               }
+            }
+      } else {
+         openCamera();
+      }
+      
+   }
+   public static void saveToPreferences(Context context, String key, Boolean allowed) {
+      SharedPreferences myPrefs = context.getSharedPreferences(CAMERA_PREF, 
+         Context.MODE_PRIVATE);
+      SharedPreferences.Editor prefsEditor = myPrefs.edit();
+      prefsEditor.putBoolean(key, allowed);
+      prefsEditor.commit();
+   }
+		
+   public static Boolean getFromPref(Context context, String key) {
+      SharedPreferences myPrefs = context.getSharedPreferences(CAMERA_PREF, 
+         Context.MODE_PRIVATE);
+      return (myPrefs.getBoolean(key, false));
+   }
+		
+   private void showAlert() {
+      AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).create();
+      alertDialog.setTitle("Alert");
+      alertDialog.setMessage("App needs to access the Camera.");
+      
+      alertDialog.setButton(AlertDialog.BUTTON_NEGATIVE, "DONT ALLOW",
+         new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
+               dialog.dismiss();
+               finish();
+            }
+      });
+			
+      alertDialog.setButton(AlertDialog.BUTTON_POSITIVE, "ALLOW",
+         new DialogInterface.OnClickListener() {
+         
+            public void onClick(DialogInterface dialog, int which) {
+               dialog.dismiss();
+               ActivityCompat.requestPermissions(MainActivity.this,
+               new String[]{Manifest.permission.CAMERA},
+               MY_PERMISSIONS_REQUEST_CAMERA);
+            }
+      });
+      alertDialog.show();
+   }
+		
+   private void showSettingsAlert() {
+      AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).create();
+      alertDialog.setTitle("Alert");
+      alertDialog.setMessage("App needs to access the Camera.");
+      
+      alertDialog.setButton(AlertDialog.BUTTON_NEGATIVE, "DONT ALLOW",
+         new DialogInterface.OnClickListener() {
+         
+            public void onClick(DialogInterface dialog, int which) {
+               dialog.dismiss();
+               //finish();
+            }
+      });
+			
+      alertDialog.setButton(AlertDialog.BUTTON_POSITIVE, "SETTINGS",
+         new DialogInterface.OnClickListener() {
+                    
+            public void onClick(DialogInterface dialog, int which) {
+               dialog.dismiss();
+               startInstalledAppDetailsActivity(MainActivity.this);
+            }
+      });
+			
+      alertDialog.show();
+   }
+		
+   @Override
+   public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+      switch (requestCode) {
+         case MY_PERMISSIONS_REQUEST_CAMERA: {
+            for (int i = 0, len = permissions.length; i < len; i++) {
+               String permission = permissions[i];
+            
+               if (grantResults[i] == PackageManager.PERMISSION_DENIED) {
+                  boolean 
+                  showRationale = 
+                     ActivityCompat.shouldShowRequestPermissionRationale(
+                     this, permission);
+                  
+                  if (showRationale) {
+                     showAlert();
+                  } else if (!showRationale) {
+                     // user denied flagging NEVER ASK AGAIN
+                     // you can either enable some fall back,
+                     // disable features of your app
+                     // or open another dialog explaining
+                     // again the permission and directing to
+                     // the app setting
+                     saveToPreferences(MainActivity.this, ALLOW_KEY, true);
+                  }
+               }
+            }
+         }
+         
+         // other 'case' lines to check for other
+         // permissions this app might request
+      }
+   }
+		
+   @Override
+   protected void onResume() {
+      super.onResume();
+   }
+		
+   public static void startInstalledAppDetailsActivity(final Activity context) {
+      if (context == null) {
+         return;
+      }
+			
+      final Intent i = new Intent();
+      i.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+      i.addCategory(Intent.CATEGORY_DEFAULT);
+      i.setData(Uri.parse("package:" + context.getPackageName()));
+      i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+      i.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+      i.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
+      context.startActivity(i);
+   }
+		
+   private void openCamera() {
+      Intent intent = new Intent("android.media.action.IMAGE_CAPTURE");
+      startActivity(intent);
+   }
+}
+Following will be the content of res/layout/activity_main.xml file−
+
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+   xmlns:tools="http://schemas.android.com/tools"
+      android:layout_width="match_parent"
+   android:layout_height="match_parent" 
+   android:paddingLeft="@dimen/activity_horizontal_margin"
+   android:paddingRight="@dimen/activity_horizontal_margin"
+   android:paddingTop="@dimen/activity_vertical_margin"
+   android:paddingBottom="@dimen/activity_vertical_margin" tools:context=".MainActivity">
+</RelativeLayout>
+Following will be the content of res/values/strings.xml to define one new constants
+
+<resources>
+   <string name="app_name">My Application</string>
+</resources>
+Following is the default content of AndroidManifest.xml −
+
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+   package="com.example.sairamkrishna.myapplication" >
+  <uses-permission android:name="android.permission.CAMERA" />
+   <application
+      android:allowBackup="true"
+      android:icon="@drawable/ic_launcher"
+      android:label="@string/app_name"
+      android:theme="@style/AppTheme" >
+      
+      <activity
+         android:name="com.example.sairamkrishna.myapplication.MainActivity"
+         android:label="@string/app_name" >
+         
+         <intent-filter>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+         </intent-filter>
+         
+     </activity>
+     
+   </application>
+</manifest>
